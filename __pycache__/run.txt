@@ -1,0 +1,6 @@
+To build/run:
+1. Unzip folder
+2. In terminal cd to /cliquet-option
+3. Install requirements (found in requirements.txt)
+4. On windows run "python app.py" this will start Flask app
+5. Run "python client.py" to test the client 

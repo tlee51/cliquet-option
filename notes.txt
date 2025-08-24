@@ -1,0 +1,10 @@
+1. For server: Have tradeID and price in the URL, and page displays these two
+2. For server: Right now the page displays a lot of info, make it so it has so, r, sigma, and just T so nresets is implicit
+3. For client: Have timestamp for when we issue request (request sent at this time: and also response received for trade at time: ). 
+And try to line up tradeid and timestamp 
+4. Deploy on cloud. For now, just zip and send and include instructions/install details in a txt file 
+
+
+
+For one and two, price endpoint with tradeID and minimum parameters in the URL. And return only tradeID and price with two decimals. 
+And don't use global cap and local cap so this makes it more dynamic. 

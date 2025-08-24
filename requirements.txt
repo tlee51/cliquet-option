@@ -1,2 +1,4 @@
 flask
 numpy
+gunicorn
+requests   # used by client.py (CLI program)

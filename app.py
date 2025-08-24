@@ -4,7 +4,9 @@ from datetime import datetime, timezone
 from typing import Optional, Dict, Any
 
 from flask import Flask, jsonify, request, abort
-from pricing import simulate_cliquet_option_price
+# from pricing import simulate_cliquet_option_price
+from Pricer.pricing import simulate_cliquet_option_price
+
 
 app = Flask(__name__)
 
