@@ -6,6 +6,8 @@ from typing import Optional, Dict, Any
 from flask import Flask, jsonify, request, abort
 # from pricing import simulate_cliquet_option_price
 from Pricer.pricing import simulate_cliquet_option_price
+import secrets
+import string
 
 
 app = Flask(__name__)
@@ -47,22 +49,42 @@ class Trade:
 
 # ---- In-memory "store" -----------------------------------------------------
 
-TRADES: Dict[str, Trade] = {
-    "T1": Trade(
-        trade_id="T1",
+def generate_trade_id(length=12) -> str:
+    alphabet = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
+
+# trade_id = generate_trade_id()
+# TRADES: Dict[str, Trade] = {
+#     "T1": Trade(
+#         trade_id=generate_trade_id(),
+#         ticker="XYZ",
+#         S0=100.0,
+#         sigma=0.2,
+#         r=0.03,
+#         T=1.0,
+#         n_resets=12,
+#         n_paths=100_000,
+#         local_floor=0.0,
+#         local_cap=5.0,
+#         global_floor=0.0,
+#         global_cap=30.0
+#     )
+# }
+
+trade_id = generate_trade_id()
+TRADES = {
+    trade_id: Trade(
+        trade_id=trade_id,
         ticker="XYZ",
         S0=100.0,
         sigma=0.2,
         r=0.03,
         T=1.0,
         n_resets=12,
-        n_paths=100_000,
-        local_floor=0.0,
-        local_cap=5.0,
-        global_floor=0.0,
-        global_cap=30.0
+        n_paths=100_000
     )
 }
+
 
 # ---- Helpers ---------------------------------------------------------------
 
@@ -74,6 +96,19 @@ def parse_float(q: Dict[str, Any], key: str) -> Optional[float]:
         return float(val)
     except ValueError:
         abort(400, f"Query parameter '{key}' must be a float")
+
+def _get_float(argname, required=True):
+    v = request.args.get(argname)
+    if v is None:
+        if required:
+            abort(400, f"Missing required query param '{argname}'")
+        return None
+    try:
+        return float(v)
+    except ValueError:
+        abort(400, f"Query param '{argname}' must be a number")
+
+
 
 # ---- Routes ----------------------------------------------------------------
 
@@ -155,6 +190,40 @@ def ad_hoc_price():
             "global_floor": global_floor, "global_cap": global_cap
         },
         "as_of": datetime.now(timezone.utc).isoformat()
+    })
+
+@app.route("/tradeprice", methods=["GET"])
+def price_trade_minimal():
+    """
+    Minimal pricing endpoint:
+    /tradeprice?trade_id=T1&S0=100&sigma=0.2&r=0.03&T=1
+    Uses trade's stored n_resets/n_paths if available; no local/global caps.
+    Returns: { "trade_id": "...", "price": 19.59 }
+    """
+    trade_id = request.args.get("trade_id")
+    if not trade_id:
+        abort(400, "Missing required query param 'trade_id'")
+
+    S0 = _get_float("S0")
+    sigma = _get_float("sigma")
+    r = _get_float("r")
+    T = _get_float("T")
+
+    # pull n_resets/n_paths from stored trade if present; otherwise defaults
+    trade = TRADES.get(trade_id)
+    n_resets = trade.n_resets if trade else 12
+    n_paths  = trade.n_paths  if trade else 50_000
+
+    px = simulate_cliquet_option_price(
+        S0=S0, r=r, sigma=sigma, T=T,
+        n_resets=n_resets, n_paths=n_paths,
+        local_floor=0.0, local_cap=None,
+        global_floor=0.0, global_cap=None
+    )
+
+    return jsonify({
+        "trade_id": trade_id,
+        "price": round(px, 2)  # two decimals
     })
 
 # ---- Entrypoint ------------------------------------------------------------

@@ -8,3 +8,6 @@ And try to line up tradeid and timestamp
 
 For one and two, price endpoint with tradeID and minimum parameters in the URL. And return only tradeID and price with two decimals. 
 And don't use global cap and local cap so this makes it more dynamic. 
+
+
+Change to cliquet_pricer 
