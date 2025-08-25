@@ -5,7 +5,7 @@ from typing import Optional, Dict, Any
 
 from flask import Flask, jsonify, request, abort
 # from pricing import simulate_cliquet_option_price
-from Pricer.pricing import simulate_cliquet_option_price
+from Pricer.cliquet_pricer import simulate_cliquet_option_price
 import secrets
 import string
 
